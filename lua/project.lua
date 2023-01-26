@@ -5,7 +5,7 @@ local CONFIG_PATH = ".nvim/config.lua"
 
 -- the default configuration of the plug-in.
 local default = {
-    -- whether to execute a shell script or not.
+    -- Whether hooks are enabled or not, or the directory where hooks are enabled.
     enable_hook = false,
     -- A shell to execute the hook script.
     shell = vim.o.shell,
@@ -17,20 +17,12 @@ local PROJECT_CONFIG = {
 local configModified = false
 
 function M.setup(config)
-    assert(not config or type(config) == "table", "the config parameter must be table or nil")
-    if config then
-        config = setmetatable(config, { __index = default })
-    else
-        config = default
-    end
-
+    local config = M.handlerConfig(config)
     local createAutocmd = vim.api.nvim_create_autocmd
     createAutocmd("VimEnter", {
         callback = function()
             M.loaderConfig()
-            if config.enable_hook then
-                M.runHook(config.shell)
-            end
+            M.runHook(config)
         end,
     })
     createAutocmd("VimLeave", {
@@ -124,19 +116,33 @@ function M.openHook(argv)
     local dir, isdir = M.getHookPath()
 
     if not isdir then
-        vim.fn.mkdir(dir)
+        vim.fn.mkdir(dir, "p")
     end
     vim.cmd.edit(dir .. "/" .. argv.fargs[1])
 end
 
 -- execute all shell scripts
-function M.runHook(shell)
+function M.runHook(config)
+    local shell = config.shell
     local dir, isdir = M.getHookPath()
 
-    if not isdir then
+    if not isdir or not config.enable_hook then
         return
     end
+    if type(config.enable_hook) == "string" then
+        if not M.isSubFile(config.enable_hook, dir) then
+            return
+        end
+    elseif vim.tbl_islist(config.enable_hook) then
+        for _, parentDir in pairs(config.enable_hook) do
+            assert(type(parentDir) == "string", "when enable_hook is a list, the elements of the list must be string.")
+            if M.isSubFile(parentDir, dir) then
+                goto continue
+            end
+        end
+    end
 
+    ::continue::
     for _, script in pairs(vim.fn.readdir(dir)) do
         local jobid = vim.fn.jobstart { shell, dir .. "/" .. script }
         if jobid == -1 then
@@ -171,6 +177,39 @@ function M.getHookPath()
     local win = vim.api.nvim_get_current_win()
     local dir = vim.fn.getcwd(win) .. "/" .. BASE_DIR .. "/hook"
     return dir, vim.fn.isdirectory(dir) == 1
+end
+
+function M.isSubFile(parentDir, tagetFile)
+    local dirs01 = vim.fn.split(parentDir, "/")
+    local dirs02 = vim.fn.split(tagetFile, "/")
+    if #dirs01 ~= #dirs02 then
+        return false
+    end
+    for index = 1, #dirs01 do
+        if dirs01[index] ~= dirs02[index] then
+            return false
+        end
+    end
+    return true
+end
+
+function M.handlerConfig(config)
+    assert(not config or type(config) == "table", "the config parameter must be table or nil")
+    if config then
+        config = setmetatable(config, { __index = default })
+    else
+        config = default
+    end
+    if type(config.enable_hook) == "string" then
+        config.enable_hook = vim.fs.normalize(config.enable_hook)
+    elseif vim.tbl_islist(config.enable_hook) then
+        for index = 1, #config.enable_hook do
+            config.enable_hook[index] = vim.fs.normalize(config.enable_hook[index])
+        end
+    elseif type(config.enable_hook) ~= "boolean" then
+        error "enable_hook must be a string, a list or a boolean."
+    end
+    return config
 end
 
 return { setup = M.setup }
