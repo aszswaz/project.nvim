@@ -3,7 +3,7 @@
 Author: aszswaz <aszswaz@163.com>
 
 =============================================================================
-CONTENT                                               *project*
+CONTENT                                               project
 
     1. Introduction                                   |project-introduction|
     2. Quickstart                                     |project-quickstart|
