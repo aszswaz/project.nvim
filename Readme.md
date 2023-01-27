@@ -42,3 +42,16 @@ require("project.nvim").setup {
     shell = vim.o.shell,
 }
 ```
+
+# How to use?
+
+```vimscript
+" view options
+:ProjectOption filetype
+" Set option parameters
+:ProjectOption filetype text
+" Opens the hook script, which will be created automatically if it does not exist.
+:ProjectOpenHook demo.sh
+" delete the hook script
+:ProjectDeleteHook demo.sh
+```
