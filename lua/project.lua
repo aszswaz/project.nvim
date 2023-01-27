@@ -130,11 +130,9 @@ function M.runHook(config)
         return
     end
     if type(config.enable_hook) == "string" then
-        print(01)
         if not M.isSubFile(config.enable_hook, dir) then
             return
         end
-        print(02)
     elseif vim.tbl_islist(config.enable_hook) then
         for _, parentDir in pairs(config.enable_hook) do
             assert(type(parentDir) == "string", "when enable_hook is a list, the elements of the list must be string.")
@@ -184,9 +182,6 @@ end
 function M.isSubFile(parentDir, tagetFile)
     local dirs01 = vim.fn.split(parentDir, "/")
     local dirs02 = vim.fn.split(tagetFile, "/")
-
-    print("dirs01:", vim.inspect(dirs01))
-    print("dirs02", vim.inspect(dirs02))
 
     if #dirs01 > #dirs02 then
         return false
