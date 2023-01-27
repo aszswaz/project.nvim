@@ -49,6 +49,10 @@ example: ProjectOpenHook demo.sh
 Batch delete the hook script for the current project.
 example: ProjectDeleteHook demo.sh test.sh
 
+*:ProjectRunHook*
+
+Re-execute the script.
+
 =============================================================================
  4. CONFIGURAION                                      *project-configuration*
 

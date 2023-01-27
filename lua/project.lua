@@ -61,6 +61,16 @@ function M.setup(config)
                 desc = "delete the hook script from the project.",
             },
         },
+        {
+            name = "ProjectRunHook",
+            action = function(argv)
+                M.runHook(config)
+            end,
+            attributes = {
+                nargs = 0,
+                desc = "re-execute the script.",
+            },
+        },
     }
     for _, command in pairs(commands) do
         vim.api.nvim_create_user_command(command.name, command.action, command.attributes)
