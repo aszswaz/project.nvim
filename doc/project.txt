@@ -60,10 +60,10 @@ The default configuration is as follows: >
     }
 <
 
-*enable_hook*
+{enable_hook}
 Accepts boolean, string or list. When it is boolean, it indicates whether to
 execute the hook script for the current project.
-*Note:* Setting enable_hook to true directly may cause security problems and
+Note: Setting enable_hook to true directly may cause security problems and
 you must ensure that there is no malicious code in the hook script for the
 current project.
 When it is a string or a list, it means that only items in the specified
@@ -76,7 +76,7 @@ directory can execute the hook script, example. >
     enable_hook = [ "~/Documents", "/dev/shm" ]
 <
 
-*shell*
+{shell}
 The shell used to execute the hook script, the default is "vim.o.shell".
 
 vim:tw=78:ts=8:noet:ft=help:norl:
