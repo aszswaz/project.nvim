@@ -1,7 +1,10 @@
 local neovim = require "project.neovim"
-local hook = require "project.hook"
+local scripts = require "project.scripts"
+local config = require "project.config"
 
-return {
+local M = {}
+
+local COMMANDS = {
     {
         name = "ProjectOption",
         action = neovim.option,
@@ -13,22 +16,22 @@ return {
     },
     {
         name = "ProjectOpenHook",
-        action = hook.openHook,
+        action = scripts.openHook,
         attributes = {
             nargs = 1,
             complete = function()
-                return vim.fn.readdir(M.getHookPath())
+                return vim.fn.readdir(config.getPaths().hook)
             end,
             desc = "create or open a hook script for the current project.",
         },
     },
     {
         name = "ProjectDeleteHook",
-        action = hook.deleteHook,
+        action = scripts.deleteHook,
         attributes = {
             nargs = "+",
             complete = function()
-                return vim.fn.readdir(M.getHookPath())
+                return vim.fn.readdir(config.getPaths().hook)
             end,
             desc = "delete the hook script from the project.",
         },
@@ -36,7 +39,7 @@ return {
     {
         name = "ProjectRunHook",
         action = function(argv)
-            hook.runHook()
+            scripts.runHook()
         end,
         attributes = {
             nargs = 0,
@@ -44,3 +47,11 @@ return {
         },
     },
 }
+
+function M.regCommands()
+    for _, command in pairs(COMMANDS) do
+        vim.api.nvim_create_user_command(command.name, command.action, command.attributes)
+    end
+end
+
+return M

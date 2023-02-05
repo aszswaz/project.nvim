@@ -1,7 +1,11 @@
 local M = {}
 
-local BASE_DIR = ".nvim"
-local CONFIG_PATH = ".nvim/config.lua"
+local PATH_CONFIG = {
+    base = nil,
+    config = nil,
+    hook = nil,
+    script = nil,
+}
 
 -- 插件的默认配置
 local DEFAULT = {
@@ -28,32 +32,29 @@ function M.setConfig(config)
     CONFIG = config
 end
 
+-- 更新配置
+function M.update()
+    local base = vim.loop.cwd() .. "/.nvim"
+    PATH_CONFIG.base = base
+    PATH_CONFIG.config = base .. "/config.json"
+    PATH_CONFIG.hook = base .. "/hook"
+    PATH_CONFIG.script = base .. "/script"
+end
+
 function M.getConfig()
-    if not CONFIG then
-        error 'Please call "require("project").setup()" to initialize the plugin.'
-    end
+    assert(CONFIG, 'Please call "require("project").setup()" to initialize the plugin.')
     return CONFIG
 end
 
-function M.getConfigPath()
-    local file = vim.loop.cwd() .. "/" .. BASE_DIR .. "/config.json"
-    return file, vim.fn.filereadable(file) == 1
-end
-
-function M.getHookPath()
-    local dir = vim.loop.cwd() .. "/" .. BASE_DIR .. "/hook"
-    return dir, vim.fn.isdirectory(dir) == 1
-end
-
-function M.getCommandDir()
-    local dir = vim.loop.cwd() .. "/" .. BASE_DIR .. "/command"
-    return dir, vim.fn.isdirectory(dir) == 1
+function M.getPaths()
+    local t = {}
+    setmetatable(t, { __index = PATH_CONFIG })
+    return t
 end
 
 return {
     setConfig = M.setConfig,
     getConfig = M.getConfig,
-    getConfigPath = M.getConfigPath,
-    getHookPath = M.getHookPath,
-    getCommandDir = M.getCommandDir,
+    getPaths = M.getPaths,
+    update = M.update,
 }
