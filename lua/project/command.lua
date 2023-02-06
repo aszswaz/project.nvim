@@ -120,7 +120,61 @@ end
 -- 执行具有 autostart 属性的脚本
 function M.autostart()
     local cfg = config.getConfig()
-    local commands = project.getCommands()
+    local commands = project.getCommands(true)
+    local cwd = vim.loop.cwd()
+
+    if type(cfg.autostart) == "string" then
+        if not M.isSubFile(cfg.autostart, cwd) then
+            return
+        end
+    elseif type(cfg.autostart) == "table" then
+        for _, iterm in pairs(cfg.autostart) do
+            if M.isSubFile(iterm, cwd) then
+                goto continue
+            end
+        end
+        return
+    elseif not cfg.autostart then
+        return
+    end
+
+    ::continue::
+    for _, iterm in commands() do
+        if iterm.autostart then
+            M.run(false, iterm.script, {})
+        end
+    end
 end
 
-return { create = M.create }
+function M.isSubFile(parentDir, tagetFile)
+    local dirs01 = vim.fn.split(parentDir, "/")
+    local dirs02 = vim.fn.split(tagetFile, "/")
+
+    if #dirs01 > #dirs02 then
+        return false
+    end
+    for index = 1, #dirs01 do
+        if dirs01[index] ~= dirs02[index] then
+            return false
+        end
+    end
+    return true
+end
+
+-- 在 neovim 启动后执行该函数
+function M.start()
+    local paths = config.getPaths()
+
+    if vim.fn.isdirectory(paths.script) == 0 then
+        return
+    end
+
+    local commands = project.getCommands(true)
+    for _, iterm in commands() do
+        M.regCmd(iterm.name, paths.script .. "/" .. iter.script, iterm.terminal)
+    end
+
+    M.autostart()
+end
+
+return { create = M.create, start = M.start }
