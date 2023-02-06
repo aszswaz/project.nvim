@@ -15,7 +15,6 @@ function M.create(obj)
     setmetatable(obj, DEFAULT)
 
     --[[
-    -- TODO:
     --   1. 打开一个用来编辑脚本的浮动窗口
     --   2. 用户关闭窗口后，执行如下操作:
     --        1. 保存指令的属性
@@ -84,33 +83,44 @@ function M.run(terminal, script, args)
     if not terminal then
         vim.fn.jobstart(command)
     else
-        local buffer = vim.api.nvim_create_buf(false, true)
-        local x, y, width, height = M.coordinate()
-        local window = vim.api.nvim_open_win(buffer, true, {
-            relative = "editor",
-            border = "single",
-            row = y,
-            col = x,
-            width = width,
-            height = height,
-        })
-        -- termopen 会直接使用当前窗口和缓冲区与用户进行交互
-        vim.api.nvim_set_current_win(window)
-        local id = vim.fn.termopen(command)
-        if id == -1 then
-            error(cfg.shell .. " is not executable")
-        end
-        vim.keymap.set("n", "q", function()
-            vim.api.nvim_win_close(window, { force = true })
-            vim.api.nvim_buf_delete(buffer, { force = true })
-        end, { buffer = buffer })
+        M.termopen(command)
     end
+end
+
+-- 打开终端窗口执行脚本
+function M.termopen(command)
+    local buffer = vim.api.nvim_create_buf(false, true)
+    local x, y, width, height = M.coordinate()
+    local window = vim.api.nvim_open_win(buffer, true, {
+        relative = "editor",
+        border = "single",
+        row = y,
+        col = x,
+        width = width,
+        height = height,
+    })
+    -- termopen 会直接使用当前窗口和缓冲区与用户进行交互
+    vim.api.nvim_set_current_win(window)
+    local id = vim.fn.termopen(command)
+    if id == -1 then
+        error(cfg.shell .. " is not executable")
+    end
+    vim.keymap.set("n", "q", function()
+        vim.api.nvim_win_close(window, { force = true })
+        vim.api.nvim_buf_delete(buffer, { force = true })
+    end, { buffer = buffer })
 end
 
 -- 计算窗口坐标
 function M.coordinate()
     local cfg = config.getConfig()
     return math.floor(vim.o.columns / 2 - cfg.width / 2), math.floor(vim.o.lines / 2 - cfg.height / 2 - 2), cfg.width, cfg.height
+end
+
+-- 执行具有 autostart 属性的脚本
+function M.autostart()
+    local cfg = config.getConfig()
+    local commands = project.getCommands()
 end
 
 return { create = M.create }
