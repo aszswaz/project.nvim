@@ -86,9 +86,20 @@ function M.getCommands(iter)
     end
 end
 
+function M.appendCommand(command)
+    PROJECT_CONFIG.commands[#PROJECT_CONFIG.commands + 1] = {
+        name = command.name,
+        script = command.script,
+        terminal = command.terminal,
+        autostart = command.autostart,
+    }
+    MODIFIED = true
+end
+
 return {
     read = M.read,
     save = M.save,
     getOptions = M.getOptions,
     getCommands = M.getCommands,
+    appendCommand = M.appendCommand,
 }

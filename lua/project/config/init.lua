@@ -9,10 +9,16 @@ local PATH_CONFIG = {
 
 -- 插件的默认配置
 local DEFAULT = {
-    -- 值为 boolean 表示是否启用 hook，值为 string 或列表，表示指定的文件夹下启用 hook
-    enable_hook = false,
+    --[[
+        如果是 boolean 表示是否执行设置了 autostart 属性的指令，
+        如果是 string 或 list，表示指定目录下的项目执行带有 autostart 属性的指令。
+    --]]
+    autostart = false,
     -- 用于执行 hook 的 shell
     shell = vim.o.shell,
+    -- 浮动窗口占用的空间
+    width = math.floor(vim.o.columns * 0.95),
+    height = math.floor(vim.o.lines * 0.95),
 }
 local CONFIG = nil
 
@@ -20,14 +26,14 @@ local CONFIG = nil
 function M.setConfig(config)
     assert(not config or type(config) == "table", "the config parameter must be table or nil")
     config = setmetatable(config, { __index = DEFAULT })
-    if type(config.enable_hook) == "string" then
-        config.enable_hook = vim.fs.normalize(config.enable_hook)
-    elseif vim.tbl_islist(config.enable_hook) then
-        for index = 1, #config.enable_hook do
-            config.enable_hook[index] = vim.fs.normalize(config.enable_hook[index])
+    if type(config.autostart) == "string" then
+        config.autostart = vim.fs.normalize(config.autostart)
+    elseif vim.tbl_islist(config.autostart) then
+        for index = 1, #config.autostart do
+            config.autostart[index] = vim.fs.normalize(config.autostart[index])
         end
-    elseif type(config.enable_hook) ~= "boolean" then
-        error "enable_hook must be a string, a list or a boolean."
+    elseif config.autostart and type(config.autostart) ~= "boolean" then
+        error "autostart must be a string, a list or a boolean."
     end
     CONFIG = config
 end
