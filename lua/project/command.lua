@@ -26,6 +26,21 @@ function M.create(obj)
     M.regCmd(obj.name, path, obj.terminal)
 end
 
+-- 在 neovim 启动后执行该函数
+function M.start()
+    local paths = config.getPaths()
+
+    if vim.fn.isdirectory(paths.script) == 0 then
+        return
+    end
+
+    for index, iterm in project.iCommands() do
+        M.regCmd(iterm.name, paths.script .. "/" .. iterm.script, iterm.terminal)
+    end
+
+    M.autostart()
+end
+
 -- 读取脚本文件
 function M.readfile(script)
     local paths = config.getPaths()
@@ -80,10 +95,13 @@ function M.run(terminal, script, args)
     for index = 1, #args do
         command[index + 2] = args[index]
     end
-    if not terminal then
-        vim.fn.jobstart(command)
-    else
+    if terminal then
         M.termopen(command)
+    else
+        local id = vim.fn.jobstart(command)
+        if id == -1 then
+            error(cfg.shell .. " is not executable")
+        end
     end
 end
 
@@ -120,8 +138,7 @@ end
 -- 执行具有 autostart 属性的脚本
 function M.autostart()
     local cfg = config.getConfig()
-    local commands = project.getCommands(true)
-    local cwd = vim.loop.cwd()
+    local path = config.getPaths().script
 
     if type(cfg.autostart) == "string" then
         if not M.isSubFile(cfg.autostart, cwd) then
@@ -139,9 +156,9 @@ function M.autostart()
     end
 
     ::continue::
-    for _, iterm in commands() do
+    for _, iterm in project.iCommands() do
         if iterm.autostart then
-            M.run(false, iterm.script, {})
+            M.run(false, path .. "/" .. iterm.script, {})
         end
     end
 end
@@ -159,22 +176,6 @@ function M.isSubFile(parentDir, tagetFile)
         end
     end
     return true
-end
-
--- 在 neovim 启动后执行该函数
-function M.start()
-    local paths = config.getPaths()
-
-    if vim.fn.isdirectory(paths.script) == 0 then
-        return
-    end
-
-    local commands = project.getCommands(true)
-    for _, iterm in commands() do
-        M.regCmd(iterm.name, paths.script .. "/" .. iter.script, iterm.terminal)
-    end
-
-    M.autostart()
 end
 
 return { create = M.create, start = M.start }

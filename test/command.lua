@@ -1,9 +1,16 @@
 local command = require "project.command"
 
-function testCommand()
+-- 对 command 进行单元测试
+
+function testCreateCommand()
     command.create {
         name = "Demo",
         script = "demo.sh",
-        terminal = true,
+        terminal = false,
+        autostart = true,
     }
+end
+
+function testStart()
+    command.start()
 end

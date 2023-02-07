@@ -37,8 +37,48 @@ function M.save()
     end
 end
 
+-- 用于迭代 options 的函数
+function M.iOptions()
+    local tbl = PROJECT_CONFIG.options
+    local lastKey = nil
+    return function()
+        local k, v = next(tbl, lastKey)
+        lastKey = k
+        return k, v
+    end
+end
+
+-- 用于遍历 commands 的迭代函数
+function M.iCommands()
+    local tbl = PROJECT_CONFIG.commands
+    local count = #tbl
+    local index = 0
+    return function()
+        index = index + 1
+        if index <= count then
+            return index, M._proxyObject(tbl[index])
+        end
+    end
+end
+
+-- 获取 options
+function M.getOptions()
+    return M._proxyObject(PROJECT_CONFIG.options)
+end
+
+-- 添加 command
+function M.appendCommand(command)
+    PROJECT_CONFIG.commands[#PROJECT_CONFIG.commands + 1] = {
+        name = command.name,
+        script = command.script,
+        terminal = command.terminal,
+        autostart = command.autostart,
+    }
+    MODIFIED = true
+end
+
 -- 用 metabale 代理原对象
-function M.proxyObject(original)
+function M._proxyObject(original)
     if type(original) ~= "table" then
         return original
     end
@@ -50,7 +90,7 @@ function M.proxyObject(original)
                 return nil
             end
             if type(original[key]) == "table" then
-                return M.proxyObject(original[key])
+                return M._proxyObject(original[key])
             else
                 return original[key]
             end
@@ -63,43 +103,11 @@ function M.proxyObject(original)
     return t
 end
 
-function M.getOptions(iter)
-    if iter then
-        -- 返回迭代器函数
-        return function()
-            local key, value = pairs(PROJECT_CONFIG.options)
-            return key, value
-        end
-    else
-        return M.proxyObject(PROJECT_CONFIG.options)
-    end
-end
-
-function M.getCommands(iter)
-    if iter then
-        return function()
-            local key, value = pairs(PROJECT_CONFIG.commands)
-            return key, M.proxyObject(value)
-        end
-    else
-        return M.proxyObject(PROJECT_CONFIG.commands)
-    end
-end
-
-function M.appendCommand(command)
-    PROJECT_CONFIG.commands[#PROJECT_CONFIG.commands + 1] = {
-        name = command.name,
-        script = command.script,
-        terminal = command.terminal,
-        autostart = command.autostart,
-    }
-    MODIFIED = true
-end
-
 return {
     read = M.read,
     save = M.save,
-    getOptions = M.getOptions,
-    getCommands = M.getCommands,
+    iOptions = M.iOptions,
+    iCommands = M.iCommands,
     appendCommand = M.appendCommand,
+    getOptions = M.getOptions,
 }

@@ -5,11 +5,9 @@ local M = {}
 
 -- 加载 neovim 选项
 function M.loader()
-    local options = project.getOptions(true)
-    if options then
-        for option, value in options() do
-            vim.o[option] = value
-        end
+    for option, value in project.iOptions() do
+        print(option)
+        vim.o[option] = value
     end
 end
 
@@ -19,7 +17,6 @@ function M.option(argv)
     local value = argv.fargs[2]
 
     local options = project.getOptions()
-
     if value then
         vim.o[opt] = value
         options[opt] = value
@@ -31,6 +28,5 @@ end
 
 return {
     loader = M.loader,
-    save = M.save,
     option = M.option,
 }

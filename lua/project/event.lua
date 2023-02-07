@@ -1,6 +1,7 @@
 local config = require "project.config"
 local neovim = require "project.neovim"
 local project = require "project.config.project"
+local command = require "project.command"
 
 -- 管理插件的事件
 local M = {}
@@ -13,6 +14,7 @@ local EVENTS = {
                 config.update()
                 project.read()
                 neovim.loader()
+                command.start()
             end,
         },
     },
