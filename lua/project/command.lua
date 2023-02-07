@@ -21,7 +21,7 @@ function M.create(newCmd)
 
     io.open(newScript, "a+"):close()
     M._editoropen(newScript)
-    M.regCmd(newCmd.name, path, newCmd.terminal)
+    M.regCmd(newCmd.name, newScript, newCmd.terminal)
 
     if oldCmd.script ~= newCmd.script then
         os.remove(paths.script .. "/" .. oldCmd.script)
@@ -55,14 +55,15 @@ end
 -- 将脚本注册为 neovim 指令
 function M.regCmd(name, script, terminal)
     -- 如果指令已存在，删除指令
-    if vim.fn.exists(name) == 2 then
+    if vim.fn.exists(":" .. name) == 2 then
         vim.api.nvim_del_user_command(name)
     end
 
     local opts = { nargs = "*", desc = script }
-    vim.api.nvim_create_user_command(name, function(argv)
+    local callback = function(argv)
         M._run(terminal, script, argv.fargs)
-    end, opts)
+    end
+    vim.api.nvim_create_user_command(name, callback, opts)
 end
 
 -- 打开编辑脚本的窗口
@@ -94,8 +95,8 @@ function M._run(terminal, script, args)
     local cfg = config.getConfig()
     local command = { cfg.shell, script }
 
-    for index = 1, #args do
-        command[index + 2] = args[index]
+    for _, arg in pairs(args) do
+        table.insert(command, arg)
     end
     if terminal then
         M._termopen(command)
