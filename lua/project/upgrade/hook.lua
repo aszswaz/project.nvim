@@ -4,23 +4,21 @@ local config = require "project.config"
 local M = {}
 
 function M.upgrade()
-    M.movDir()
-    M.tocommands()
-end
-
--- 将目录 hook 重命名为 script
-function M.movDir()
-    local cfgPaths = config.getPaths()
-    if vim.fn.isdirectory(cfgPaths.hook) == 1 then
-        local status, msg = os.rename(cfgPaths.hook, cfgPaths.script)
+    local paths = config.getPaths()
+    if vim.fn.isdirectory(paths.hook) == 1 then
+        -- 重命名 hook 文件夹
+        local status, msg = os.rename(path, paths.script)
         if not status then
             error(msg)
         end
+
+        M._toCommands(paths.script)
     end
 end
 
 -- 将脚本注册为 neovim 指令，并设置自启动属性
-function M.tocommands()
+function M._toCommands(dir)
+
 end
 
 return { upgrade = M.upgrade }

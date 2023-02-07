@@ -21,8 +21,8 @@ function M.create(obj)
     --        2. 注册指令到 neovim
     --]]
     project.appendCommand(obj)
-    local path, content = M.readfile(obj.script)
-    M.openScriptWindow(path, content)
+    local path, content = M._readfile(obj.script)
+    M._editoropen(path, content)
     M.regCmd(obj.name, path, obj.terminal)
 end
 
@@ -38,11 +38,19 @@ function M.start()
         M.regCmd(iterm.name, paths.script .. "/" .. iterm.script, iterm.terminal)
     end
 
-    M.autostart()
+    M._autostart()
+end
+
+-- 将脚本注册为 neovim 指令
+function M.regCmd(name, script, terminal)
+    local opts = { nargs = "*", desc = script }
+    vim.api.nvim_create_user_command(name, function(argv)
+        M._run(terminal, script, argv.fargs)
+    end, opts)
 end
 
 -- 读取脚本文件
-function M.readfile(script)
+function M._readfile(script)
     local paths = config.getPaths()
     local dir = paths.script
     local path = dir .. "/" .. script
@@ -56,8 +64,8 @@ function M.readfile(script)
 end
 
 -- 打开编辑脚本的窗口
-function M.openScriptWindow(file, content)
-    local x, y, width, height = M.coordinate()
+function M._editoropen(file, content)
+    local x, y, width, height = M._coordinate()
 
     local buffer = vim.fn.bufadd(file)
     vim.fn.appendbufline(buffer, 0, content)
@@ -79,16 +87,8 @@ function M.openScriptWindow(file, content)
     })
 end
 
--- 将脚本注册为 neovim 指令
-function M.regCmd(name, script, terminal)
-    local opts = { nargs = "*", desc = script }
-    vim.api.nvim_create_user_command(name, function(argv)
-        M.run(terminal, script, argv.fargs)
-    end, opts)
-end
-
 -- 执行脚本
-function M.run(terminal, script, args)
+function M._run(terminal, script, args)
     local cfg = config.getConfig()
     local command = { cfg.shell, script }
 
@@ -96,7 +96,7 @@ function M.run(terminal, script, args)
         command[index + 2] = args[index]
     end
     if terminal then
-        M.termopen(command)
+        M._termopen(command)
     else
         local id = vim.fn.jobstart(command)
         if id == -1 then
@@ -106,9 +106,9 @@ function M.run(terminal, script, args)
 end
 
 -- 打开终端窗口执行脚本
-function M.termopen(command)
+function M._termopen(command)
     local buffer = vim.api.nvim_create_buf(false, true)
-    local x, y, width, height = M.coordinate()
+    local x, y, width, height = M._coordinate()
     local window = vim.api.nvim_open_win(buffer, true, {
         relative = "editor",
         border = "single",
@@ -130,13 +130,13 @@ function M.termopen(command)
 end
 
 -- 计算窗口坐标
-function M.coordinate()
+function M._coordinate()
     local cfg = config.getConfig()
     return math.floor(vim.o.columns / 2 - cfg.width / 2), math.floor(vim.o.lines / 2 - cfg.height / 2 - 2), cfg.width, cfg.height
 end
 
 -- 执行具有 autostart 属性的脚本
-function M.autostart()
+function M._autostart()
     local cfg = config.getConfig()
     local path = config.getPaths().script
 
@@ -158,9 +158,9 @@ function M.autostart()
     ::continue::
     for _, iterm in project.iCommands() do
         if iterm.autostart then
-            M.run(false, path .. "/" .. iterm.script, {})
+            M._run(false, path .. "/" .. iterm.script, {})
         end
     end
 end
 
-return { create = M.create, start = M.start }
+return { create = M.create, start = M.start, regCmd = M.regCmd }
