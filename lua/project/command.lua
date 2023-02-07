@@ -72,6 +72,7 @@ function M._editoropen(file)
 
     local buffer = vim.fn.bufadd(file)
     vim.fn.appendbufline(buffer, 0, vim.fn.readfile(file))
+    vim.bo[buffer].filetype = "sh"
     local window = vim.api.nvim_open_win(buffer, true, {
         relative = "editor",
         width = width,
