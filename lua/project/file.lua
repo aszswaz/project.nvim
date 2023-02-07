@@ -1,6 +1,6 @@
 local M = {}
 
-function M.isSubFile(parentDir, tagetFile)
+function M.isChild(parentDir, tagetFile)
     local dirs01 = vim.fn.split(parentDir, "/")
     local dirs02 = vim.fn.split(tagetFile, "/")
 
@@ -15,4 +15,4 @@ function M.isSubFile(parentDir, tagetFile)
     return true
 end
 
-return { isSubFile = M.isSubFile }
+return { isChild = M.isChild }

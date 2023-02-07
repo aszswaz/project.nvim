@@ -141,12 +141,12 @@ function M.autostart()
     local path = config.getPaths().script
 
     if type(cfg.autostart) == "string" then
-        if not M.isSubFile(cfg.autostart, cwd) then
+        if not file.isChild(cfg.autostart, cwd) then
             return
         end
     elseif type(cfg.autostart) == "table" then
         for _, iterm in pairs(cfg.autostart) do
-            if M.isSubFile(iterm, cwd) then
+            if file.isChild(iterm, cwd) then
                 goto continue
             end
         end
@@ -161,21 +161,6 @@ function M.autostart()
             M.run(false, path .. "/" .. iterm.script, {})
         end
     end
-end
-
-function M.isSubFile(parentDir, tagetFile)
-    local dirs01 = vim.fn.split(parentDir, "/")
-    local dirs02 = vim.fn.split(tagetFile, "/")
-
-    if #dirs01 > #dirs02 then
-        return false
-    end
-    for index = 1, #dirs01 do
-        if dirs01[index] ~= dirs02[index] then
-            return false
-        end
-    end
-    return true
 end
 
 return { create = M.create, start = M.start }
