@@ -24,15 +24,22 @@ local CONFIG = nil
 
 -- 设置插件配置
 function M.setConfig(config)
-    assert(not config or type(config) == "table", "the config parameter must be table or nil")
+    config = config or {}
     config = setmetatable(config, { __index = DEFAULT })
-    if type(config.autostart) == "string" then
+
+    vim.validate {
+        autostart = { config.autostart, { "table", "string", "boolean" } },
+        shell = { config.shell, "string" },
+    }
+
+    local typeStr = type(config.autostart)
+    if typeStr == "string" then
         config.autostart = vim.fs.normalize(config.autostart)
     elseif vim.tbl_islist(config.autostart) then
         for index = 1, #config.autostart do
             config.autostart[index] = vim.fs.normalize(config.autostart[index])
         end
-    elseif config.autostart and type(config.autostart) ~= "boolean" then
+    elseif config.autostart and typeStr ~= "boolean" then
         error "autostart must be a string, a list or a boolean."
     end
     CONFIG = config

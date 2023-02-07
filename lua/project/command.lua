@@ -7,23 +7,34 @@ local M = {}
 local DEFAULT = { name = nil, script = nil, autostart = false, terminal = false }
 
 -- 创建指令对象
-function M.create(obj)
-    assert(obj, "obj cannot be nil")
-    assert(obj.name, "please specify a name for the directive")
-    assert(obj.script, "please specify the script for the command")
+function M.create(newCmd)
+    vim.validate {
+        cmd = { newCmd, "table" },
+        name = { newCmd.name, "string" },
+        script = { newCmd.script, "string" },
+    }
+    setmetatable(newCmd, { __index = DEFAULT })
 
-    setmetatable(obj, DEFAULT)
+    local oldCmd = project.appendCmd(newCmd)
+    local paths = config.getPaths()
+    local newScript = paths.script .. "/" .. newCmd.script
 
-    --[[
-    --   1. 打开一个用来编辑脚本的浮动窗口
-    --   2. 用户关闭窗口后，执行如下操作:
-    --        1. 保存指令的属性
-    --        2. 注册指令到 neovim
-    --]]
-    project.appendCommand(obj)
-    local path, content = M._readfile(obj.script)
-    M._editoropen(path, content)
-    M.regCmd(obj.name, path, obj.terminal)
+    io.open(newScript, "a+"):close()
+    M._editoropen(newScript)
+    M.regCmd(newCmd.name, path, newCmd.terminal)
+
+    if oldCmd.script ~= newCmd.script then
+        os.remove(paths.script .. "/" .. oldCmd.script)
+    end
+end
+
+-- 删除指令
+function M.delete(name)
+    vim.validate { name = { name, "string" } }
+    local cmd = project.delCmd(name)
+    local paths = config.getPaths()
+    os.remove(paths.script .. "/" .. cmd.script)
+    vim.api.nvim_del_user_command(name)
 end
 
 -- 在 neovim 启动后执行该函数
@@ -43,32 +54,23 @@ end
 
 -- 将脚本注册为 neovim 指令
 function M.regCmd(name, script, terminal)
+    -- 如果指令已存在，删除指令
+    if vim.fn.exists(name) == 2 then
+        vim.api.nvim_del_user_command(name)
+    end
+
     local opts = { nargs = "*", desc = script }
     vim.api.nvim_create_user_command(name, function(argv)
         M._run(terminal, script, argv.fargs)
     end, opts)
 end
 
--- 读取脚本文件
-function M._readfile(script)
-    local paths = config.getPaths()
-    local dir = paths.script
-    local path = dir .. "/" .. script
-
-    if vim.fn.isdirectory(dir) == 0 then
-        vim.fn.mkdir(dir, "p")
-    end
-    -- 无论用户是否向脚本中写入过内容，都必须确保文件的存在
-    io.open(path, "a+"):close()
-    return path, vim.fn.readfile(path)
-end
-
 -- 打开编辑脚本的窗口
-function M._editoropen(file, content)
+function M._editoropen(file)
     local x, y, width, height = M._coordinate()
 
     local buffer = vim.fn.bufadd(file)
-    vim.fn.appendbufline(buffer, 0, content)
+    vim.fn.appendbufline(buffer, 0, vim.fn.readfile(file))
     local window = vim.api.nvim_open_win(buffer, true, {
         relative = "editor",
         width = width,
@@ -98,7 +100,15 @@ function M._run(terminal, script, args)
     if terminal then
         M._termopen(command)
     else
-        local id = vim.fn.jobstart(command)
+        local callback = function(id, data, event)
+            for _, line in pairs(data) do
+                print(line)
+            end
+        end
+        local id = vim.fn.jobstart(command, {
+            on_stdout = callback,
+            on_stderr = callback,
+        })
         if id == -1 then
             error(cfg.shell .. " is not executable")
         end
@@ -163,4 +173,9 @@ function M._autostart()
     end
 end
 
-return { create = M.create, start = M.start, regCmd = M.regCmd }
+return {
+    create = M.create,
+    delete = M.delete,
+    start = M.start,
+    regCmd = M.regCmd,
+}

@@ -67,14 +67,47 @@ function M.getOptions()
 end
 
 -- 添加 command
-function M.appendCommand(command)
-    PROJECT_CONFIG.commands[#PROJECT_CONFIG.commands + 1] = {
+function M.appendCmd(command)
+    vim.validate {
+        command = { command, "table" },
+        name = { command.name, "string" },
+        script = { command.script, "string" },
+        terminal = { command.terminal, "boolean" },
+        autostart = { command.autostart, "boolean" },
+    }
+
+    local tbl = PROJECT_CONFIG.commands
+
+    for _, iterm in pairs(tbl) do
+        if iterm.name == command.name then
+            iterm.script = command.script
+            iterm.terminal = command.terminal
+            iterm.autostart = command.autostart
+            MODIFIED = true
+            return iterm
+        end
+    end
+
+    table.insert(tbl, {
         name = command.name,
         script = command.script,
         terminal = command.terminal,
         autostart = command.autostart,
-    }
+    })
     MODIFIED = true
+    return command
+end
+
+-- 删除 command
+function M.delCmd(name)
+    vim.validate { name = { name, "string" } }
+    local tbl = PROJECT_CONFIG.commands
+    for index = 1, #tbl do
+        if tbl[index].name == name then
+            MODIFIED = true
+            return table.remove(tbl, index)
+        end
+    end
 end
 
 -- 用 metabale 代理原对象
@@ -108,6 +141,7 @@ return {
     save = M.save,
     iOptions = M.iOptions,
     iCommands = M.iCommands,
-    appendCommand = M.appendCommand,
+    appendCmd = M.appendCmd,
+    delCmd = M.delCmd,
     getOptions = M.getOptions,
 }

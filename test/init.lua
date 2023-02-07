@@ -11,6 +11,6 @@ runtimePath[1] = "/" .. vim.fn.join(strings, "/")
 vim.o.runtimepath = vim.fn.join(runtimePath, ",")
 
 require("project").setup {
-    enable_hook = true,
+    autostart = true,
     shell = "/usr/bin/bash",
 }

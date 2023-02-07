@@ -27,7 +27,7 @@ function M._toCommands(dir)
         if char >= 97 and char <= 122 then
             -- 首字母改为大写字母作为指令的名称
             local commandName = vim.fn.nr2char(char - 32) .. string.sub(fileName, 2)
-            project.appendCommand { name = commandName, script = file, terminal = false, autostart = true }
+            project.appendCmd { name = commandName, script = file, terminal = false, autostart = true }
         elseif char < 65 or char > 90 then
             -- 首个字符不是字母
             error "the first character of the script name must be a letter"
