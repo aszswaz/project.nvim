@@ -1,4 +1,4 @@
-*project* A plugin to manage the project's configuration and hook scripts.
+*project* Project configuration manager.
 
 Author: aszswaz <aszswaz@163.com>
 
@@ -13,9 +13,27 @@ CONTENT                                               project
 =============================================================================
  1. INTRODUCTION                                      *project-introduction*
 
-Functions:
-    1. the user can set neovim options specific to the current project.
-    2. manage or execute the hook for the current project.
+"project.nvim" supports the following functions:
+    1. neovim options localization management.
+    2. External shell scripts are mapped to neovim commands.
+
+At some point, when we open neovim in a certain directory, we need to
+configure some neovim options for this directory. For example, use ctags to
+generate a .tags file, in order to allow neovim to use it, we must execute
+`set tags = ./.tags`, but at this time the value of the option |tags| is
+only applicable to the current directory, not suitable for other directory,
+we can use |:ProjectOption| to set |tags|, it will save the |tags| option and
+its value to `.nvim/config.json`, next time you start neovim in the same
+directory, "project.nvim" will automatically load this file.
+
+When we use ctags to generate |tags| files, we usually need to pass some
+parameters to ctags so that it can generate the |tags| files we expect.
+We can use the command `:ProjectCmd --autostart Ctags` to create a shell
+script to execute ctags, |:ProjectCmd| will save the script in the
+`.nvim/script` directory, and will register a |user-commands| "Ctags",
+"Ctags" will use |jobstart| to execute the script, and "--autostart" means
+that this script should be executed automatically when neovim is started in
+the current directory.
 
 =============================================================================
  2. QUICKSTART                                        *project-quickstart*
@@ -28,7 +46,7 @@ The setup function needs to be called in the lua file, example: >
     -- or customise some of the options.
     require("project").setup {
         shell = vim.o.shell,
-        enable_hook = false,
+        autostart = false,
     }
 <
 
@@ -37,21 +55,28 @@ For more information on the options see |project-configuration|.
 =============================================================================
  3. COMMANDS                                          *project-commands*
 
-*:ProjectOption*
+*:ProjectOption* {option} {value}
 Set or view the neovim options for the current project.
-example: ProjectOption filetype text
+Paramaters: ~
+    {option} neovim options.
+    {value}  option value.
+Example: ~
+    `:ProjectOption filetype text`
 
-*:ProjectOpenHook*
-Create or open a hook script for the current project.
-example: ProjectOpenHook demo.sh
+*:ProjectCmd* [option] <command name>
+Create or edit a shell script and register a |user-commands| to execute it.
+Option: ~
+    --autostart After neovim starts, this command is automatically executed.
+    --terminal  Whether to open a pty terminal window when executing this
+                command in command mode.
+Example: ~
+>
+    :ProjectCmd --autostart --terminal CmakeBuildDebug
+    :CmakeBuildDebug
+<
 
-*:ProjectDeleteHook*
-Batch delete the hook script for the current project.
-example: ProjectDeleteHook demo.sh test.sh
-
-*:ProjectRunHook*
-
-Re-execute the script.
+*:ProjectCmdDel* <command name>
+Remove shell commands, and |user-commands|.
 
 =============================================================================
  4. CONFIGURAION                                      *project-configuration*
@@ -59,28 +84,28 @@ Re-execute the script.
 The default configuration is as follows: >
 
     require("project").setup {
-        enable_hook = false,
+        autostart = false,
         shell = vim.o.shell,
     }
 <
 
-{enable_hook}
+{autostart}
 Accepts boolean, string or list. When it is boolean, it indicates whether to
-execute the hook script for the current project.
-Note: Setting enable_hook to true directly may cause security problems and
-you must ensure that there is no malicious code in the hook script for the
+execute the script for the current project.
+Note: Setting autostart to true directly may cause security problems and
+you must ensure that there is no malicious code in the script for the
 current project.
 When it is a string or a list, it means that only items in the specified
-directory can execute the hook script, example. >
+directory can execute the script, example. >
 
     -- The current project must be in the "~/Documents" directory
-    -- in order for the hook script to be executed.
-    enable_hook = "~/Documents"
+    -- in order for the script to be executed.
+    autostart = "~/Documents"
     -- You can set up multiple directories.
-    enable_hook = [ "~/Documents", "/dev/shm" ]
+    autostart = [ "~/Documents", "/dev/shm" ]
 <
 
 {shell}
-The shell used to execute the hook script, the default is "vim.o.shell".
+The shell used to execute the script, the default is "vim.o.shell".
 
-vim:tw=78:ts=8:noet:ft=help:norl:
+vim:tw=78:ft=help:
