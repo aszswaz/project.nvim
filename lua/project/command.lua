@@ -151,6 +151,7 @@ end
 function M._autostart()
     local cfg = config.getConfig()
     local path = config.getPaths().script
+    local cwd = vim.loop.cwd()
 
     if type(cfg.autostart) == "string" then
         if not file.isChild(cfg.autostart, cwd) then
