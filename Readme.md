@@ -1,14 +1,26 @@
 # Introduction
 
-`project.nvim` is a plugin for managing project configuration. For example, integrated development tools such as [IntelliJ IDEA](https://www.jetbrains.com/idea/) will save project-related configurations in the .idea folder under the project directory. I was inspired by it and developed a plug-in with similar functions for neovim.
+"project.nvim" supports the following functions:
+    1. neovim options localization management.
+    2. External shell scripts are mapped to neovim commands.
 
-# Features
+At some point, when we open neovim in a certain directory, we need to
+configure some neovim options for this directory. For example, use ctags to
+generate a .tags file, in order to allow neovim to use it, we must execute
+`set tags = ./.tags`, but at this time the value of the option tags is
+only applicable to the current directory, not suitable for other directory,
+we can use :ProjectOption to set tags, it will save the |tags| option and
+its value to `.nvim/config.json`, next time you start neovim in the same
+directory, "project.nvim" will automatically load this file.
 
-1. Manage neovim options that apply only to current project.
-
-2. Users can write hook scripts for the current project, and `project.nvim` will execute these scripts after neovim starts.
-
-All configurations and hook hook scripts of the current project are saved in the `.nvim` folder.
+When we use ctags to generate tags files, we usually need to pass some
+parameters to ctags so that it can generate the tags files we expect.
+We can use the command `:ProjectCmd --autostart Ctags` to create a shell
+script to execute ctags, :ProjectCmd will save the script in the
+`.nvim/script` directory, and will register a user-commands "Ctags",
+"Ctags" will use |jobstart| to execute the script, and "--autostart" means
+that this script should be executed automatically when neovim is started in
+the current directory.
 
 # Install
 
@@ -31,14 +43,14 @@ require("project.nvim").setup {}
 -- custom options
 require("project.nvim").setup {
     --[[
-        enable_hook supports three types of value: boolean, string, list.
-        enable_hook = false, disable execution of project hook scripts.
-        enable_hook = true, allows execution of project hook scripts, but this may pose security issues.
-        enable_hook = "~/", only projects in the specified directory are allowed to execute scripts.
-        enable_hook = { "~/", "/dev/shm" }, ditto.
+        autostart supports three types of value: boolean, string, list.
+        autostart = false, disable shell script execution when neovim is started.
+        autostart = true, allows shell scripts to be executed when neovim starts.
+        autostart = "~/", executes shell scripts when neovim starts in the specified directory and subdirectories.
+        autostart = { "~/", "/dev/shm" }, ditto.
     --]]
-    enable_hook = false,
-    -- specify the interpreter to execute the hook script. Bash si recommended.
+    autostart = false,
+    -- specify the interpreter to execute the script. Bash si recommended.
     shell = vim.o.shell,
 }
 ```
@@ -52,9 +64,9 @@ require("project.nvim").setup {
 " Set option parameters
 :ProjectOption filetype text
 
-" Opens the hook script, which will be created automatically if it does not exist.
-:ProjectOpenHook demo.sh
+" Create a shell script and register a user-commands to execute the script, --autostart means that the script needs to be executed automatically when neovim starts.
+:ProjectCmd --autostart Demo
 
-" delete the hook script
-:ProjectDeleteHook demo.sh
+" Remove shell scripts, and user-commands.
+:ProjectCmdDel Demo
 ```

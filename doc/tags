@@ -1,7 +1,6 @@
-:ProjectDeleteHook	project.txt	/*:ProjectDeleteHook*
-:ProjectOpenHook	project.txt	/*:ProjectOpenHook*
+:ProjectCmd	project.txt	/*:ProjectCmd*
+:ProjectCmdDel	project.txt	/*:ProjectCmdDel*
 :ProjectOption	project.txt	/*:ProjectOption*
-:ProjectRunHook	project.txt	/*:ProjectRunHook*
 project	project.txt	/*project*
 project-commands	project.txt	/*project-commands*
 project-configuration	project.txt	/*project-configuration*
