@@ -19,7 +19,14 @@ function M.create(newCmd)
     local paths = config.getPaths()
     local newScript = paths.script .. "/" .. newCmd.script
 
-    io.open(newScript, "a+"):close()
+    if vim.fn.isdirectory(paths.script) == 0 then
+        vim.fn.mkdir(paths.script, "p")
+    end
+
+    local file, msg = io.open(newScript, "a+")
+    if not file then
+        error(msg)
+    end
     M._editoropen(newScript)
     M.regCmd(newCmd.name, newScript, newCmd.terminal)
 
@@ -68,11 +75,11 @@ end
 
 -- 打开编辑脚本的窗口
 function M._editoropen(file)
-    local x, y, width, height = M._coordinate()
-
     local buffer = vim.fn.bufadd(file)
     vim.fn.appendbufline(buffer, 0, vim.fn.readfile(file))
     vim.bo[buffer].filetype = "sh"
+
+    local x, y, width, height = M._coordinate()
     local window = vim.api.nvim_open_win(buffer, true, {
         relative = "editor",
         width = width,
@@ -82,7 +89,8 @@ function M._editoropen(file)
         focusable = true,
         border = "single",
     })
-    vim.wo[window].winhighlight = "NormalFloat:Normal"
+    M._setHighlight(window)
+
     vim.api.nvim_create_autocmd("WinClosed", {
         pattern = tostring(window),
         callback = function()
@@ -120,6 +128,7 @@ end
 -- 打开终端窗口执行脚本
 function M._termopen(command)
     local buffer = vim.api.nvim_create_buf(false, true)
+
     local x, y, width, height = M._coordinate()
     local window = vim.api.nvim_open_win(buffer, true, {
         relative = "editor",
@@ -129,6 +138,7 @@ function M._termopen(command)
         width = width,
         height = height,
     })
+    M._setHighlight(window)
     -- termopen 会直接使用当前窗口和缓冲区与用户进行交互
     vim.api.nvim_set_current_win(window)
     local id = vim.fn.termopen(command)
@@ -139,6 +149,9 @@ function M._termopen(command)
         vim.api.nvim_win_close(window, { force = true })
         vim.api.nvim_buf_delete(buffer, { force = true })
     end, { buffer = buffer })
+
+    -- 将光标移动到最后一行，当 shell 输出超过窗口高度时，termopen() 会把光标保持在最后一行
+    vim.cmd.normal "G"
 end
 
 -- 计算窗口坐标
@@ -173,6 +186,21 @@ function M._autostart()
         if iterm.autostart then
             M._run(false, path .. "/" .. iterm.script, {})
         end
+    end
+end
+
+-- 设置窗口样式
+function M._setHighlight(win)
+    -- neovim 默认主题的浮动窗口的背景色太亮，导致无法正常显示文字，需要使用自定义样式
+    if vim.fn.exists "g:colors_name" == 0 then
+        if vim.fn.hlID "ProjectWindow" == 0 then
+            vim.api.nvim_set_hl(0, "ProjectWindow", {
+                bg = "#000000",
+            })
+        end
+        vim.wo[win].winhighlight = "NormalFloat:ProjectWindow"
+    else
+        vim.wo[win].winhighlight = "NormalFloat:Normal"
     end
 end
 

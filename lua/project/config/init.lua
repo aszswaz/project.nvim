@@ -17,8 +17,8 @@ local DEFAULT = {
     -- 用于执行 hook 的 shell
     shell = vim.o.shell,
     -- 浮动窗口占用的空间
-    width = math.floor(vim.o.columns * 0.95),
-    height = math.floor(vim.o.lines * 0.95),
+    width = math.floor(vim.o.columns * 0.85),
+    height = math.floor(vim.o.lines * 0.85),
 }
 local CONFIG = nil
 
