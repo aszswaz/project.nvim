@@ -6,7 +6,6 @@ local M = {}
 -- 加载 neovim 选项
 function M.loader()
     for option, value in project.iOptions() do
-        print(option)
         vim.o[option] = value
     end
 end
