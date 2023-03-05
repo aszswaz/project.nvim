@@ -18,16 +18,37 @@ local COMMANDS = {
     {
         name = "ProjectCmd",
         action = function(argv)
-            command.create(M._newCmd(argv.fargs))
+            local newCmd = {}
+            for _, iterm in pairs(argv.fargs) do
+                if iterm == "--enable-autostart" then
+                    newCmd.autostart = true
+                elseif iterm == "--disable-autostart" then
+                    newCmd.autostart = false
+                elseif iterm == "--enable-terminal" then
+                    newCmd.terminal = true
+                elseif iterm == "--disable-terminal" then
+                    newCmd.terminal = false
+                else
+                    newCmd.name = iterm
+                    newCmd.script = iterm
+                    break
+                end
+            end
+            command.create(newCmd)
         end,
         attributes = {
             nargs = "+",
-            complete = function()
-                local c = { "--autostart", "--terminal" }
+            complete = function(argLead, cmdLine)
+                local c = {
+                    "--enable-autostart",
+                    "--disable-autostart",
+                    "--enable-terminal",
+                    "--disable-terminal",
+                }
                 for _, iterm in project.iCommands() do
                     table.insert(c, iterm.name)
                 end
-                return c
+                return M._complete(argLead, cmdLine, c)
             end,
             desc = "Manages the mapping of external shells to neovim commands.",
         },
@@ -40,38 +61,36 @@ local COMMANDS = {
         attributes = {
             nargs = 1,
             desc = "Remove script directives.",
-            complete = function()
+            complete = function(argLead, cmdLine)
                 local cmds = {}
                 for _, iterm in project.iCommands() do
                     table.insert(cmds, iterm.name)
                 end
-                return cmds
+                return M._complete(argLead, cmdLine, cmds)
             end,
         },
     },
 }
 
+-- 注册 user command
 function M.regCommands()
     for _, command in pairs(COMMANDS) do
         vim.api.nvim_create_user_command(command.name, command.action, command.attributes)
     end
 end
 
-function M._newCmd(args)
-    local newCmd = {}
-
-    for _, iterm in pairs(args) do
-        if iterm == "--autostart" then
-            newCmd.autostart = true
-        elseif iterm == "--terminal" then
-            newCmd.terminal = true
-        else
-            newCmd.name = iterm
-            newCmd.script = iterm
-            break
+-- 在给定的列表中匹配选项
+function M._complete(argLead, cmdLine, opts)
+    local result = {}
+    local contain = function(text, expr)
+        return vim.fn.match(text, expr) ~= -1
+    end
+    for _, iterm in pairs(opts) do
+        if contain(iterm, argLead) and not contain(cmdLine, iterm) then
+            table.insert(result, iterm)
         end
     end
-    return newCmd
+    return result
 end
 
 return { regCommands = M.regCommands }

@@ -66,25 +66,28 @@ function M.getOptions()
     return M._proxyObject(PROJECT_CONFIG.options)
 end
 
--- 添加 command
+-- 添加 command，并返回旧的 command 配置
 function M.appendCmd(command)
     vim.validate {
         command = { command, "table" },
         name = { command.name, "string" },
         script = { command.script, "string" },
-        terminal = { command.terminal, "boolean" },
-        autostart = { command.autostart, "boolean" },
     }
 
     local tbl = PROJECT_CONFIG.commands
 
     for _, iterm in pairs(tbl) do
         if iterm.name == command.name then
+            local old = vim.deepcopy(iterm)
             iterm.script = command.script
-            iterm.terminal = command.terminal
-            iterm.autostart = command.autostart
+            if command.terminal ~= nil then
+                iterm.terminal = command.terminal
+            end
+            if command.autostart ~= nil then
+                iterm.autostart = command.autostart
+            end
             MODIFIED = true
-            return iterm
+            return old
         end
     end
 

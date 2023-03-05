@@ -66,12 +66,14 @@ Example: ~
 *:ProjectCmd* [option] <command name>
 Create or edit a shell script and register a |user-commands| to execute it.
 Option: ~
-    --autostart After neovim starts, this command is automatically executed.
-    --terminal  Whether to open a pty terminal window when executing this
-                command in command mode.
+    --enable-autostart  After neovim starts, this command is automatically executed.
+    --disable-autostart Automatic execution of instructions is prohibited.
+    --enable-terminal   Whether to open a pty terminal window when executing this
+                        command in command mode.
+    --enable-terminal   Disable opening of PTY windows.
 Example: ~
 >
-    :ProjectCmd --autostart --terminal CmakeBuildDebug
+    :ProjectCmd --enable-autostart --enable-terminal CmakeBuildDebug
     :CmakeBuildDebug
 <
 

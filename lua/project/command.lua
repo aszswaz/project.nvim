@@ -4,7 +4,6 @@ local project = require "project.config.project"
 
 -- 管理脚本
 local M = {}
-local DEFAULT = { name = nil, script = nil, autostart = false, terminal = false }
 
 -- 创建指令对象
 function M.create(newCmd)
@@ -13,9 +12,7 @@ function M.create(newCmd)
         name = { newCmd.name, "string" },
         script = { newCmd.script, "string" },
     }
-    setmetatable(newCmd, { __index = DEFAULT })
 
-    local oldCmd = project.appendCmd(newCmd)
     local paths = config.getPaths()
     local newScript = paths.script .. "/" .. newCmd.script
 
@@ -23,13 +20,12 @@ function M.create(newCmd)
         vim.fn.mkdir(paths.script, "p")
     end
 
-    local file, msg = io.open(newScript, "a+")
-    if not file then
-        error(msg)
-    end
-    M._editoropen(newScript)
+    -- 先注册 user command，这样可以先校验指令名称是否正确
     M.regCmd(newCmd.name, newScript, newCmd.terminal)
 
+    M._editoropen(newScript)
+
+    local oldCmd = project.appendCmd(newCmd)
     if oldCmd.script ~= newCmd.script then
         os.remove(paths.script .. "/" .. oldCmd.script)
     end
@@ -44,7 +40,10 @@ function M.delete(name)
     vim.api.nvim_del_user_command(name)
 end
 
--- 在 neovim 启动后执行该函数
+--[[
+  在 neovim 启动后执行该函数，
+  将脚本注册为 user command，并执行设置了 autostart 的脚本
+--]]
 function M.start()
     local paths = config.getPaths()
 
@@ -76,7 +75,15 @@ end
 -- 打开编辑脚本的窗口
 function M._editoropen(file)
     local buffer = vim.fn.bufadd(file)
-    vim.fn.appendbufline(buffer, 0, vim.fn.readfile(file))
+
+    if vim.fn.filereadable(file) == 1 then
+        vim.fn.appendbufline(buffer, 0, vim.fn.readfile(file))
+    else
+        -- 创建文件
+        vim.fn.writefile({}, file)
+        -- 将文件的权限设置为：用户和组内用户可读、可写和可执行
+        vim.fn.setfperm(file, "rwxrwx---")
+    end
     vim.bo[buffer].filetype = "sh"
 
     local x, y, width, height = M._coordinate()
