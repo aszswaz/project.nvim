@@ -36,8 +36,8 @@ end
 function M._autostart()
     config.update()
     project.read()
-    autoset.run()
     command.start()
+    autoset.run()
 end
 
 return M
