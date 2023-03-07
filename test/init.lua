@@ -11,6 +11,6 @@ runtimePath[1] = "/" .. vim.fn.join(strings, "/")
 vim.o.runtimepath = vim.fn.join(runtimePath, ",")
 
 require("project").setup {
-    autostart = "~/Documents/project/aszswaz",
+    autostart = { "~/Documents/project/aszswaz", "/dev/shm" },
     shell = "/usr/bin/bash",
 }

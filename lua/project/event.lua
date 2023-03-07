@@ -1,43 +1,43 @@
 local config = require "project.config"
-local neovim = require "project.neovim"
 local project = require "project.config.project"
 local command = require "project.command"
-local upgrade = require "project.upgrade.hook"
+local autoset = require "project.autoset"
 
 -- 管理插件的事件
 local M = {}
 
-local EVENTS = {
-    {
-        name = "VimEnter",
-        options = {
-            callback = function()
-                config.update()
-                project.read()
-                upgrade.upgrade()
-                neovim.loader()
-                command.start()
-            end,
-        },
-    },
-    {
-        name = "VimLeave",
-        options = {
-            callback = project.save,
-        },
-    },
-    {
-        name = "DirChanged",
-        options = {
-            callback = config.update,
-        },
-    },
-}
-
 function M.regEvent()
+    local EVENTS = {
+        {
+            name = "VimEnter",
+            options = {
+                callback = M._autostart,
+            },
+        },
+        {
+            name = "VimLeave",
+            options = {
+                callback = project.save,
+            },
+        },
+        {
+            name = "DirChanged",
+            options = {
+                callback = M._autostart,
+            },
+        },
+    }
+
     for _, iterm in pairs(EVENTS) do
         vim.api.nvim_create_autocmd(iterm.name, iterm.options)
     end
+end
+
+function M._autostart()
+    config.update()
+    project.read()
+    autoset.run()
+    command.start()
 end
 
 return M

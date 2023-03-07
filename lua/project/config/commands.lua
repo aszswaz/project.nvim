@@ -2,17 +2,17 @@ local neovim = require "project.neovim"
 local config = require "project.config"
 local command = require "project.command"
 local project = require "project.config.project"
+local autoset = require "project.autoset"
 
 local M = {}
 
 local COMMANDS = {
     {
-        name = "ProjectOption",
-        action = neovim.option,
+        name = "ProjectEdit",
+        action = autoset.edit,
         attributes = {
-            nargs = "+",
-            complete = "option",
-            desc = "set the neovim option, which only works on the current project.",
+            nargs = 0,
+            desc = "Edit .nvim/autoset.vim file",
         },
     },
     {

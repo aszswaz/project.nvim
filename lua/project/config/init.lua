@@ -49,20 +49,17 @@ end
 function M.update()
     local base = vim.loop.cwd() .. "/.nvim"
     PATH_CONFIG.base = base
-    PATH_CONFIG.config = base .. "/config.json"
-    PATH_CONFIG.hook = base .. "/hook"
+    PATH_CONFIG.autoset = base .. "/autoset.vim"
     PATH_CONFIG.script = base .. "/script"
 end
 
 function M.getConfig()
     assert(CONFIG, 'Please call "require("project").setup()" to initialize the plugin.')
-    return CONFIG
+    return vim.deepcopy(CONFIG)
 end
 
 function M.getPaths()
-    local t = {}
-    setmetatable(t, { __index = PATH_CONFIG })
-    return t
+    return vim.deepcopy(PATH_CONFIG)
 end
 
 return {
