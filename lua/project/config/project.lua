@@ -51,12 +51,16 @@ end
 -- 用于遍历 commands 的迭代函数
 function M.iCommands()
     local tbl = PROJECT_CONFIG.commands
+    if not tbl then
+        return nil
+    end
+
     local count = #tbl
     local index = 0
     return function()
         index = index + 1
         if index <= count then
-            return index, M._proxyObject(tbl[index])
+            return index, vim.deepcopy(tbl[index])
         end
     end
 end
@@ -64,6 +68,16 @@ end
 -- 获取 options
 function M.getOptions()
     return M._proxyObject(PROJECT_CONFIG.options)
+end
+
+-- 查找 command 配置
+function M.findCmd(name)
+    for _, iterm in pairs(PROJECT_CONFIG.commands) do
+        if iterm.name == name then
+            return vim.deepcopy(iterm)
+        end
+    end
+    return nil
 end
 
 -- 添加 command，并返回旧的 command 配置
@@ -80,14 +94,9 @@ function M.appendCmd(command)
         if iterm.name == command.name then
             local old = vim.deepcopy(iterm)
             iterm.script = command.script
-            if command.terminal ~= nil then
-                iterm.terminal = command.terminal
-            end
-            if command.autostart ~= nil then
-                iterm.autostart = command.autostart
-            end
+            iterm.terminal = command.terminal
+            iterm.autostart = command.autostart
             MODIFIED = true
-            return old
         end
     end
 
@@ -98,7 +107,6 @@ function M.appendCmd(command)
         autostart = command.autostart,
     })
     MODIFIED = true
-    return command
 end
 
 -- 删除 command
@@ -144,6 +152,7 @@ return {
     save = M.save,
     iOptions = M.iOptions,
     iCommands = M.iCommands,
+    findCmd = M.findCmd,
     appendCmd = M.appendCmd,
     delCmd = M.delCmd,
     getOptions = M.getOptions,

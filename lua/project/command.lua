@@ -14,21 +14,27 @@ function M.create(newCmd)
     }
 
     local paths = config.getPaths()
-    local newScript = paths.script .. "/" .. newCmd.script
 
     if vim.fn.isdirectory(paths.script) == 0 then
         vim.fn.mkdir(paths.script, "p")
     end
 
-    -- 先注册 user command，这样可以先校验指令名称是否正确
-    M.regCmd(newCmd.name, newScript, newCmd.terminal)
-
-    M._editoropen(newScript)
-
-    local oldCmd = project.appendCmd(newCmd)
-    if oldCmd.script ~= newCmd.script then
-        os.remove(paths.script .. "/" .. oldCmd.script)
+    -- 查找 command 旧的配置，整合 command 旧的配置和新的配置
+    local oldCmd = project.findCmd(newCmd.name)
+    if oldCmd then
+        newCmd.autostart = newCmd.autostart == nil and oldCmd.autostart or newCmd.autostart
+        newCmd.terminal = newCmd.terminal == nil and oldCmd.terminal or newCmd.terminal
+    else
+        newCmd.autostart = not not newCmd.autostart
+        newCmd.terminal = not not newCmd.terminal
     end
+
+    -- 注册 user command
+    local script = paths.script .. "/" .. newCmd.script
+    M.regCmd(newCmd.name, script, newCmd.terminal)
+    M._editoropen(script)
+
+    project.appendCmd(newCmd)
 end
 
 -- 删除指令
