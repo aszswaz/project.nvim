@@ -1,4 +1,3 @@
-local neovim = require "project.neovim"
 local config = require "project.config"
 local command = require "project.command"
 local project = require "project.config.project"
