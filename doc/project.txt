@@ -1,4 +1,4 @@
-*project* Project configuration manager.
+*project.nvim* Project configuration manager.
 
 Author: aszswaz <aszswaz@163.com>
 
@@ -22,8 +22,8 @@ configure some neovim options for this directory. For example, use ctags to
 generate a .tags file, in order to allow neovim to use it, we must execute
 `set tags = ./.tags`, but at this time the value of the option |tags| is
 only applicable to the current directory, not suitable for other directory,
-We can execute |:ProjectEdit| to open the .nvim/autoset.vim file, and
-|project| will execute it automatically.
+we can execute |:ProjectEdit| to open the .nvim/autoset.vim file, and
+|project.nvim| will execute it automatically.
 
 When we use ctags to generate |tags| files, we usually need to pass some
 parameters to ctags so that it can generate the |tags| files we expect.

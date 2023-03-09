@@ -1,8 +1,8 @@
 :ProjectCmd	project.txt	/*:ProjectCmd*
 :ProjectCmdDel	project.txt	/*:ProjectCmdDel*
 :ProjectEdit	project.txt	/*:ProjectEdit*
-project	project.txt	/*project*
 project-commands	project.txt	/*project-commands*
 project-configuration	project.txt	/*project-configuration*
 project-introduction	project.txt	/*project-introduction*
 project-quickstart	project.txt	/*project-quickstart*
+project.nvim	project.txt	/*project.nvim*
