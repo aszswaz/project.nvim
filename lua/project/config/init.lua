@@ -47,8 +47,9 @@ end
 
 -- 更新配置
 function M.update()
-    local base = vim.loop.cwd() .. "/.nvim"
+    local base = vim.fn.getcwd(0) .. "/.nvim"
     PATH_CONFIG.base = base
+    PATH_CONFIG.config = base .. "/config.json"
     PATH_CONFIG.autoset = base .. "/autoset.vim"
     PATH_CONFIG.script = base .. "/script"
 end

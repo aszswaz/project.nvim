@@ -44,7 +44,7 @@ local COMMANDS = {
                     "--enable-terminal",
                     "--disable-terminal",
                 }
-                for _, iterm in project.iCommands() do
+                for _, iterm in pairs(project.getCmds()) do
                     table.insert(c, iterm.name)
                 end
                 return M._complete(argLead, cmdLine, c)
@@ -62,7 +62,7 @@ local COMMANDS = {
             desc = "Remove script directives.",
             complete = function(argLead, cmdLine)
                 local cmds = {}
-                for _, iterm in project.iCommands() do
+                for _, iterm in pairs(project.getCmds()) do
                     table.insert(cmds, iterm.name)
                 end
                 return M._complete(argLead, cmdLine, cmds)

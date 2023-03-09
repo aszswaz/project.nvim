@@ -23,8 +23,9 @@ end
 function M.save()
     if MODIFIED then
         local json = vim.fn.json_encode(PROJECT_CONFIG)
-        local file = config.getPaths().config
-        local dir = vim.fs.dirname(file)
+        local paths = config.getPaths()
+        local dir = paths.base
+        local file = paths.config
 
         if vim.fn.isdirectory(dir) == 0 then
             vim.fn.mkdir(dir)
@@ -35,20 +36,8 @@ function M.save()
 end
 
 -- 用于遍历 commands 的迭代函数
-function M.iCommands()
-    local tbl = PROJECT_CONFIG.commands
-    if not tbl then
-        return nil
-    end
-
-    local count = #tbl
-    local index = 0
-    return function()
-        index = index + 1
-        if index <= count then
-            return index, vim.deepcopy(tbl[index])
-        end
-    end
+function M.getCmds()
+    return vim.deepcopy(PROJECT_CONFIG.commands)
 end
 
 -- 查找 command 配置
@@ -106,7 +95,7 @@ end
 return {
     read = M.read,
     save = M.save,
-    iCommands = M.iCommands,
+    getCmds = M.getCmds,
     findCmd = M.findCmd,
     appendCmd = M.appendCmd,
     delCmd = M.delCmd,

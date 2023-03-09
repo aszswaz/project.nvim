@@ -1,5 +1,5 @@
 local config = require "project.config"
-local editor = require "project.util.editor"
+local window = require "project.util.window"
 local util = require "project.util"
 
 local M = {}
@@ -10,7 +10,7 @@ function M.edit()
     if vim.fn.isdirectory(paths.base) == 0 then
         vim.fn.mkdir(paths.base, "p")
     end
-    editor.openFile(paths.autoset)
+    window.editor(paths.autoset)
 end
 
 function M.run()

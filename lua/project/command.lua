@@ -1,7 +1,7 @@
 local config = require "project.config"
 local util = require "project.util"
 local project = require "project.config.project"
-local editor = require "project.util.editor"
+local window = require "project.util.window"
 
 -- 管理脚本
 local M = {}
@@ -58,7 +58,7 @@ function M.start()
         return
     end
 
-    for index, iterm in project.iCommands() do
+    for index, iterm in pairs(project.getCmds()) do
         M.regCmd(iterm.name, paths.script .. "/" .. iterm.script, iterm.terminal)
     end
 
@@ -95,7 +95,7 @@ function M._openEditor(file)
         vim.fn.setfperm(file, "rwxrwx---")
     end
 
-    editor.openFile(file)
+    window.editor(file)
 end
 
 -- 执行脚本
@@ -109,54 +109,16 @@ function M._run(terminal, script, args)
         end
     end
     if terminal then
-        M._termopen(command)
+        window.terminal(command)
     else
-        local callback = function(id, data, event)
-            for _, line in pairs(data) do
-                print(line)
-            end
-        end
         local id = vim.fn.jobstart(command, {
-            on_stdout = callback,
-            on_stderr = callback,
+            on_stdout = M.jobCallback,
+            on_stderr = M.jobCallback,
         })
         if id == -1 then
             error(cfg.shell .. " is not executable")
         end
     end
-end
-
--- 打开终端窗口执行脚本
-function M._termopen(command)
-    local buffer = vim.api.nvim_create_buf(false, true)
-
-    local x, y, width, height = M._coordinate()
-    local window = vim.api.nvim_open_win(buffer, true, {
-        relative = "editor",
-        border = "single",
-        row = y,
-        col = x,
-        width = width,
-        height = height,
-    })
-    M._setHighlight(window)
-
-    -- termopen 会直接使用当前窗口和缓冲区与用户进行交互
-    vim.api.nvim_set_current_win(window)
-    local id = vim.fn.termopen(command)
-    if id == -1 then
-        error(cfg.shell .. " is not executable")
-    end
-
-    -- 窗口关闭后删除 buffer
-    vim.api.nvim_create_autocmd("WinClosed", {
-        pattern = tostring(window),
-        callback = function()
-            vim.api.nvim_buf_delete(buffer, { force = true })
-        end,
-    })
-    -- 进入 terminal 模式
-    vim.cmd.startinsert()
 end
 
 -- 执行具有 autostart 属性的脚本
@@ -167,10 +129,17 @@ function M._autostart()
         return
     end
 
-    for _, iterm in project.iCommands() do
+    for _, iterm in pairs(project.getCmds()) do
         if iterm.autostart then
             M._run(false, path .. "/" .. iterm.script)
         end
+    end
+end
+
+-- 执行 jobstart 时的回调函数
+function M.jobCallback(id, data, event)
+    for _, line in pairs(data) do
+        print(line)
     end
 end
 

@@ -7,7 +7,7 @@ local autoset = require "project.autoset"
 local M = {}
 
 function M.regEvent()
-    local EVENTS = {
+    local events = {
         {
             name = "VimEnter",
             options = {
@@ -28,7 +28,7 @@ function M.regEvent()
         },
     }
 
-    for _, iterm in pairs(EVENTS) do
+    for _, iterm in pairs(events) do
         vim.api.nvim_create_autocmd(iterm.name, iterm.options)
     end
 end
